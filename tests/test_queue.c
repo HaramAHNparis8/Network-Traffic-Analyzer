@@ -144,6 +144,86 @@ int main(void) {
     CHECK_EQ(queue.size, 0,
          "정상 조건 검증");
 
+    // 10. Queue Boundary Test
+    printf("\n[10] Queue Boundary Test\n");
+
+    // 1. 빈 큐에서 Dequeue
+    Packet erase = {0};
+
+    int res = dequeue(&queue, &erase);
+
+    CHECK_EQ(res, 0, "빈 큐 Dequeue 실패 처리");
+    CHECK_EQ(queue.size, 0, "빈 큐 크기 유지");
+    CHECK(queue.front == NULL, "빈 큐 Front 유지");
+    CHECK(queue.rear == NULL, "빈 큐 Rear 유지");
+
+    // 2. 노드 하나 삽입 후 삭제
+    Packet p4 = {0};
+    p4.src_ip = 40;
+
+    res = enqueue(&queue, p4);
+
+    CHECK_EQ(res, 1, "단일 노드 삽입");
+
+    if (res == 1) {
+        CHECK_EQ(queue.size, 1, "단일 노드 크기");
+        CHECK(queue.front == queue.rear,
+              "단일 노드 Front/Rear 일치");
+
+        res = dequeue(&queue, &erase);
+
+        CHECK_EQ(res, 1, "마지막 노드 삭제");
+
+        if (res == 1) {
+            CHECK_EQ(erase.src_ip, 40,
+                     "삭제된 패킷 확인");
+        }
+
+        CHECK(queue.front == NULL,
+              "Front NULL 확인");
+
+        CHECK(queue.rear == NULL,
+              "Rear NULL 확인");
+
+        CHECK_EQ(queue.size, 0,
+                 "삭제 후 크기 0");
+    }
+
+    // 3. 큐 재사용
+    Packet p5 = {0};
+    p5.src_ip = 50;
+
+    res = enqueue(&queue, p5);
+
+    CHECK_EQ(res, 1, "큐 재삽입 성공");
+
+    if (res == 1) {
+        CHECK_EQ(queue.size, 1,
+                 "재삽입 후 크기");
+
+        CHECK(queue.front != NULL,
+              "재삽입 Front 존재");
+
+        CHECK(queue.front == queue.rear,
+              "재삽입 Front/Rear 일치");
+
+        if (queue.front != NULL) {
+            CHECK_EQ(queue.front->packet.src_ip,
+                     50, "재삽입 데이터 확인");
+
+            CHECK(queue.front->next == NULL,
+                  "재삽입 노드 Next NULL");
+        }
+    }
+
+    printQueue(&queue);
+
+    // 4. 최종 메모리 해제
+    freeQueue(&queue);
+
+    CHECK_EQ(queue.size, 0, "최종 큐 크기");
+    CHECK(queue.front == NULL, "최종 Front");
+    CHECK(queue.rear == NULL, "최종 Rear");
 // 최종 결과
     TEST_SUMMARY();
 
