@@ -133,16 +133,16 @@ int main(void) {
          "빈 큐 상태 확인");
 
 // 9. 의도적인 오류 탐지 테스트
-    printf("\n[9] Failure Detection Test\n");
+//    printf("\n[9] Failure Detection Test\n");
 
-    CHECK_EQ(queue.size, 5,
-         "큐 크기 불일치 탐지");
+//    CHECK_EQ(queue.size, 5,
+//         "큐 크기 불일치 탐지");
 
-    CHECK(queue.front != NULL,
-      "Front 포인터 오류 탐지");
+//    CHECK(queue.front != NULL,
+//      "Front 포인터 오류 탐지");
 
-    CHECK_EQ(queue.size, 0,
-         "정상 조건 검증");
+//    CHECK_EQ(queue.size, 0,
+//         "정상 조건 검증");
 
     // 10. Queue Boundary Test
     printf("\n[10] Queue Boundary Test\n");

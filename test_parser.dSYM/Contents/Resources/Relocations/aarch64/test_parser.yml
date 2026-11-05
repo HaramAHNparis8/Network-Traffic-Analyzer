@@ -2,21 +2,21 @@
 triple:          'arm64-apple-darwin'
 binary-path:     test_parser
 relocations:
-  - { offset: 0x26, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x0, symBinAddr: 0x100000A4C, symSize: 0x148 }
+  - { offset: 0x26, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x0, symBinAddr: 0x100000AA0, symSize: 0x148 }
   - { offset: 0x4D, size: 0x8, addend: 0x0, symName: _tcp_frame, symObjAddr: 0x3079, symBinAddr: 0x100003F2D, symSize: 0x0 }
   - { offset: 0x85, size: 0x8, addend: 0x0, symName: _udp_frame, symObjAddr: 0x30AF, symBinAddr: 0x100003F63, symSize: 0x0 }
-  - { offset: 0xA6, size: 0x8, addend: 0x0, symName: _tests_passed, symObjAddr: 0x4710, symBinAddr: 0x100008000, symSize: 0x0 }
-  - { offset: 0xC2, size: 0x8, addend: 0x0, symName: _colors_enabled, symObjAddr: 0x4714, symBinAddr: 0x100008004, symSize: 0x0 }
-  - { offset: 0xD7, size: 0x8, addend: 0x0, symName: _tests_failed, symObjAddr: 0x4718, symBinAddr: 0x100008008, symSize: 0x0 }
-  - { offset: 0x102, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x0, symBinAddr: 0x100000A4C, symSize: 0x148 }
-  - { offset: 0x11B, size: 0x8, addend: 0x0, symName: _initTestFramework, symObjAddr: 0x148, symBinAddr: 0x100000B94, symSize: 0x2C }
-  - { offset: 0x130, size: 0x8, addend: 0x0, symName: _testTCP, symObjAddr: 0x174, symBinAddr: 0x100000BC0, symSize: 0xD3C }
-  - { offset: 0x295, size: 0x8, addend: 0x0, symName: _testUDP, symObjAddr: 0xEB0, symBinAddr: 0x1000018FC, symSize: 0xD3C }
-  - { offset: 0x3FA, size: 0x8, addend: 0x0, symName: _testInvalidPackets, symObjAddr: 0x1BEC, symBinAddr: 0x100002638, symSize: 0xC20 }
-  - { offset: 0x536, size: 0x8, addend: 0x0, symName: _testUnsupportedPackets, symObjAddr: 0x280C, symBinAddr: 0x100003258, symSize: 0x474 }
-  - { offset: 0x5C2, size: 0x8, addend: 0x0, symName: _getColor, symObjAddr: 0x2C80, symBinAddr: 0x1000036CC, symSize: 0x6C }
-  - { offset: 0x6AE, size: 0x8, addend: 0x0, symName: _parsePacket, symObjAddr: 0x0, symBinAddr: 0x100003738, symSize: 0x3D0 }
-  - { offset: 0x701, size: 0x8, addend: 0x0, symName: _parsePacket, symObjAddr: 0x0, symBinAddr: 0x100003738, symSize: 0x3D0 }
-  - { offset: 0x7FD, size: 0x8, addend: 0x0, symName: _read16, symObjAddr: 0x3D0, symBinAddr: 0x100003B08, symSize: 0x28 }
-  - { offset: 0x825, size: 0x8, addend: 0x0, symName: _read32, symObjAddr: 0x3F8, symBinAddr: 0x100003B30, symSize: 0x40 }
+  - { offset: 0xA6, size: 0x8, addend: 0x0, symName: _tests_passed, symObjAddr: 0x47A8, symBinAddr: 0x100008000, symSize: 0x0 }
+  - { offset: 0xC2, size: 0x8, addend: 0x0, symName: _colors_enabled, symObjAddr: 0x47AC, symBinAddr: 0x100008004, symSize: 0x0 }
+  - { offset: 0xD7, size: 0x8, addend: 0x0, symName: _tests_failed, symObjAddr: 0x47B0, symBinAddr: 0x100008008, symSize: 0x0 }
+  - { offset: 0x102, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x0, symBinAddr: 0x100000AA0, symSize: 0x148 }
+  - { offset: 0x11B, size: 0x8, addend: 0x0, symName: _initTestFramework, symObjAddr: 0x148, symBinAddr: 0x100000BE8, symSize: 0x2C }
+  - { offset: 0x130, size: 0x8, addend: 0x0, symName: _testTCP, symObjAddr: 0x174, symBinAddr: 0x100000C14, symSize: 0xD3C }
+  - { offset: 0x295, size: 0x8, addend: 0x0, symName: _testUDP, symObjAddr: 0xEB0, symBinAddr: 0x100001950, symSize: 0xD3C }
+  - { offset: 0x3FA, size: 0x8, addend: 0x0, symName: _testInvalidPackets, symObjAddr: 0x1BEC, symBinAddr: 0x10000268C, symSize: 0xC20 }
+  - { offset: 0x536, size: 0x8, addend: 0x0, symName: _testUnsupportedPackets, symObjAddr: 0x280C, symBinAddr: 0x1000032AC, symSize: 0x474 }
+  - { offset: 0x5C2, size: 0x8, addend: 0x0, symName: _getColor, symObjAddr: 0x2C80, symBinAddr: 0x100003720, symSize: 0x6C }
+  - { offset: 0x6D0, size: 0x8, addend: 0x0, symName: _parsePacket, symObjAddr: 0x0, symBinAddr: 0x10000378C, symSize: 0x37C }
+  - { offset: 0x735, size: 0x8, addend: 0x0, symName: _parsePacket, symObjAddr: 0x0, symBinAddr: 0x10000378C, symSize: 0x37C }
+  - { offset: 0x813, size: 0x8, addend: 0x0, symName: _read16, symObjAddr: 0x37C, symBinAddr: 0x100003B08, symSize: 0x28 }
+  - { offset: 0x83B, size: 0x8, addend: 0x0, symName: _read32, symObjAddr: 0x3A4, symBinAddr: 0x100003B30, symSize: 0x40 }
 ...

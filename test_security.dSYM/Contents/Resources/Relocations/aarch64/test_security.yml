@@ -1,0 +1,32 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     test_security
+relocations:
+  - { offset: 0x26, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x0, symBinAddr: 0x100000FB4, symSize: 0xA8 }
+  - { offset: 0x4D, size: 0x8, addend: 0x0, symName: _passed, symObjAddr: 0x31D8, symBinAddr: 0x100008000, symSize: 0x0 }
+  - { offset: 0x69, size: 0x8, addend: 0x0, symName: _failed, symObjAddr: 0x31DC, symBinAddr: 0x100008004, symSize: 0x0 }
+  - { offset: 0x84, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x0, symBinAddr: 0x100000FB4, symSize: 0xA8 }
+  - { offset: 0x9E, size: 0x8, addend: 0x0, symName: _testTCPFlags, symObjAddr: 0xA8, symBinAddr: 0x10000105C, symSize: 0x488 }
+  - { offset: 0xD0, size: 0x8, addend: 0x0, symName: _testPortScan, symObjAddr: 0x530, symBinAddr: 0x1000014E4, symSize: 0x38C }
+  - { offset: 0x14C, size: 0x8, addend: 0x0, symName: _testSYNFlood, symObjAddr: 0x8BC, symBinAddr: 0x100001870, symSize: 0x4E0 }
+  - { offset: 0x1C8, size: 0x8, addend: 0x0, symName: _testTimeWindow, symObjAddr: 0xD9C, symBinAddr: 0x100001D50, symSize: 0x244 }
+  - { offset: 0x235, size: 0x8, addend: 0x0, symName: _testStatistics, symObjAddr: 0xFE0, symBinAddr: 0x100001F94, symSize: 0x508 }
+  - { offset: 0x287, size: 0x8, addend: 0x0, symName: _makeTCP, symObjAddr: 0x14E8, symBinAddr: 0x10000249C, symSize: 0x6C }
+  - { offset: 0x5B0, size: 0x8, addend: 0x0, symName: _printIPv4, symObjAddr: 0x0, symBinAddr: 0x100002508, symSize: 0x7C }
+  - { offset: 0x5D9, size: 0x8, addend: 0x0, symName: _printIPv4, symObjAddr: 0x0, symBinAddr: 0x100002508, symSize: 0x7C }
+  - { offset: 0x60B, size: 0x8, addend: 0x0, symName: _printTcpFlags, symObjAddr: 0x7C, symBinAddr: 0x100002584, symSize: 0x148 }
+  - { offset: 0x692, size: 0x8, addend: 0x0, symName: _securityInit, symObjAddr: 0x1C4, symBinAddr: 0x1000026CC, symSize: 0x30 }
+  - { offset: 0x6B6, size: 0x8, addend: 0x0, symName: _securityProcess, symObjAddr: 0x1F4, symBinAddr: 0x1000026FC, symSize: 0x49C }
+  - { offset: 0x742, size: 0x8, addend: 0x0, symName: _sourceFor, symObjAddr: 0x690, symBinAddr: 0x100002B98, symSize: 0x20C }
+  - { offset: 0x7CC, size: 0x8, addend: 0x0, symName: _flowFor, symObjAddr: 0x89C, symBinAddr: 0x100002DA4, symSize: 0x110 }
+  - { offset: 0x83A, size: 0x8, addend: 0x0, symName: _discardExpired, symObjAddr: 0x9AC, symBinAddr: 0x100002EB4, symSize: 0xD4 }
+  - { offset: 0x888, size: 0x8, addend: 0x0, symName: _distinctPorts, symObjAddr: 0xA80, symBinAddr: 0x100002F88, symSize: 0xE0 }
+  - { offset: 0x912, size: 0x8, addend: 0x0, symName: _alert, symObjAddr: 0xB60, symBinAddr: 0x100003068, symSize: 0xDC }
+  - { offset: 0x97C, size: 0x8, addend: 0x0, symName: _securityPrintSummary, symObjAddr: 0xC3C, symBinAddr: 0x100003144, symSize: 0x1F4 }
+  - { offset: 0x9FA, size: 0x8, addend: 0x0, symName: _byPackets, symObjAddr: 0xE30, symBinAddr: 0x100003338, symSize: 0x88 }
+  - { offset: 0xA51, size: 0x8, addend: 0x0, symName: _securityFree, symObjAddr: 0xEB8, symBinAddr: 0x1000033C0, symSize: 0xD4 }
+  - { offset: 0xFBE, size: 0x8, addend: 0x0, symName: _parsePacket, symObjAddr: 0x0, symBinAddr: 0x100003494, symSize: 0x37C }
+  - { offset: 0x1023, size: 0x8, addend: 0x0, symName: _parsePacket, symObjAddr: 0x0, symBinAddr: 0x100003494, symSize: 0x37C }
+  - { offset: 0x1101, size: 0x8, addend: 0x0, symName: _read16, symObjAddr: 0x37C, symBinAddr: 0x100003810, symSize: 0x28 }
+  - { offset: 0x1129, size: 0x8, addend: 0x0, symName: _read32, symObjAddr: 0x3A4, symBinAddr: 0x100003838, symSize: 0x40 }
+...
