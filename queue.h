@@ -18,7 +18,8 @@ typedef struct Queue {
 void initQueue(Queue *queue);
 int enqueue(Queue *queue, Packet packet);
 int dequeue(QUEUE *queue, Packet *packet);
-int isEmpty(con);
+int isEmpty(const Queue, *queue);
+void freeQueue(Queue *queue);
 #endif
 
 
