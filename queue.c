@@ -8,6 +8,12 @@ void initQueue(Queue *queue){
 	queue -> size = 0;
 }
 
+
+int isEmpty(const Queue *queue) {
+    return queue->front == NULL;
+}
+
+
 int dequeue(Queue *queue, Packet *packet) {
 
     // 빈 큐이거나 잘못된 인자면 실패
