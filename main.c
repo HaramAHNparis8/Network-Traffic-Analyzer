@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,6 +7,7 @@
 #include "parser.h"
 #include "queue.h"
 #include "security.h"
+#include "conntrack.h"
 
 static void printPacket(
     const Packet *p,
@@ -41,7 +43,7 @@ static void printPacket(
 int main(int argc, char **argv) {
     if (argc < 2 || argc > 3 ||
         (argc == 3 &&
-         strcmp(argv[2], "--verbose"))) {
+         strcmp(argv[2], "--verbose") != 0)) {
 
         fprintf(
             stderr,
@@ -59,11 +61,9 @@ int main(int argc, char **argv) {
     if (!pcapOpen(&reader, argv[1])) {
         fprintf(
             stderr,
-            "Cannot open PCAP "
-            "(classic Ethernet pcap required): %s\n",
+            "Cannot open PCAP: %s\n",
             argv[1]
         );
-
         return 1;
     }
 
@@ -72,6 +72,9 @@ int main(int argc, char **argv) {
 
     SecurityAnalyzer sec;
     securityInit(&sec);
+
+    ConnTracker ct;
+    conntrackInit(&ct);
 
     unsigned long long unsupported = 0;
     unsigned long long invalid = 0;
@@ -124,7 +127,11 @@ int main(int argc, char **argv) {
         p.timestamp = ts;
 
         if (!enqueue(&q, p)) {
-            fputs("Queue allocation failure\n", stderr);
+            fputs(
+                "Queue allocation failure\n",
+                stderr
+            );
+
             error = 1;
             break;
         }
@@ -132,7 +139,11 @@ int main(int argc, char **argv) {
         Packet item;
 
         if (!dequeue(&q, &item)) {
-            fputs("Queue dequeue failure\n", stderr);
+            fputs(
+                "Queue dequeue failure\n",
+                stderr
+            );
+
             error = 1;
             break;
         }
@@ -144,6 +155,7 @@ int main(int argc, char **argv) {
             );
         }
 
+        // 출발지별 통계 및 공격 의심 탐지
         if (!securityProcess(
                 &sec,
                 &item,
@@ -151,13 +163,16 @@ int main(int argc, char **argv) {
             )) {
 
             fputs(
-                "Security analyzer allocation failure\n",
+                "Security analyzer failure\n",
                 stderr
             );
 
             error = 1;
             break;
         }
+
+        // TCP 3-way handshake 상태 추적
+        conntrackProcess(&ct, &item);
     }
 
     securityPrintSummary(&sec, stdout);
@@ -168,12 +183,20 @@ int main(int argc, char **argv) {
         invalid
     );
 
-    if (error)
+    // PCAP을 끝까지 읽었을 때 남은 연결 정리
+    if (!error)
+        conntrackFinish(&ct);
+
+    conntrackSummary(&ct, stdout);
+
+    if (error) {
         fputs(
             "INCOMPLETE: processing stopped due to error\n",
             stderr
         );
+    }
 
+    conntrackFree(&ct);
     securityFree(&sec);
     freeQueue(&q);
     pcapClose(&reader);
