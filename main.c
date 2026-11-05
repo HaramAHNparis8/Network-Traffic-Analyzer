@@ -1,121 +1,181 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
+#include <string.h>
 
 #include "pcap_reader.h"
 #include "parser.h"
 #include "queue.h"
+#include "security.h"
 
-// IPv4 주소 출력
-static void printIP(unsigned int ip) {
-    printf("%u.%u.%u.%u",
-           (ip >> 24) & 255u,
-           (ip >> 16) & 255u,
-           (ip >> 8) & 255u,
-           ip & 255u);
+static void printPacket(
+    const Packet *p,
+    unsigned long long n
+) {
+    printf(
+        "\n[Packet #%llu] time=%.6f\n",
+        n, p->timestamp
+    );
+
+    fputs("  ", stdout);
+    printIPv4(stdout, p->src_ip);
+
+    printf(":%u -> ", (unsigned)p->src_port);
+
+    printIPv4(stdout, p->dst_ip);
+
+    printf(
+        ":%u  %s  IP bytes=%u",
+        (unsigned)p->dst_port,
+        p->protocol == 6 ? "TCP" : "UDP",
+        (unsigned)p->length
+    );
+
+    if (p->protocol == 6) {
+        fputs("  flags=", stdout);
+        printTcpFlags(stdout, p->tcp_flags);
+    }
+
+    fputc('\n', stdout);
 }
 
-int main(int argc, char *argv[]) {
-    if (argc != 2) {
-        fprintf(stderr, "Usage: %s <file.pcap>\n", argv[0]);
+int main(int argc, char **argv) {
+    if (argc < 2 || argc > 3 ||
+        (argc == 3 &&
+         strcmp(argv[2], "--verbose"))) {
+
+        fprintf(
+            stderr,
+            "Usage: %s <file.pcap> [--verbose]\n",
+            argv[0]
+        );
+
         return 1;
     }
+
+    int verbose = argc == 3;
 
     PcapReader reader;
 
     if (!pcapOpen(&reader, argv[1])) {
-        fprintf(stderr, "PCAP 파일을 열 수 없습니다.\n");
+        fprintf(
+            stderr,
+            "Cannot open PCAP "
+            "(classic Ethernet pcap required): %s\n",
+            argv[1]
+        );
+
         return 1;
     }
 
-    Queue queue;
-    initQueue(&queue);
+    Queue q;
+    initQueue(&q);
 
-    unsigned long count = 0;
-    unsigned long unsupported = 0;
-    unsigned long invalid = 0;
+    SecurityAnalyzer sec;
+    securityInit(&sec);
+
+    unsigned long long unsupported = 0;
+    unsigned long long invalid = 0;
+
     int error = 0;
 
-    printf("=== Network Traffic Analyzer ===\n");
+    puts("=== Network Traffic Analyzer ===");
 
     for (;;) {
         uint8_t *raw = NULL;
-        size_t length = 0;
-        double timestamp = 0;
+        size_t len = 0;
+        double ts = 0;
 
-        int status = pcapNext(
-            &reader, &raw, &length, &timestamp
+        int state = pcapNext(
+            &reader,
+            &raw,
+            &len,
+            &ts
         );
 
-        if (status == 0)
+        if (state == 0)
             break;
 
-        if (status < 0) {
-            fprintf(stderr, "PCAP 읽기 오류\n");
+        if (state < 0) {
+            fputs("PCAP read error\n", stderr);
             error = 1;
             break;
         }
 
-        Packet packet = {0};
+        Packet p = {0};
 
-        ParseResult result =
-            parsePacket(raw, length, &packet);
+        ParseResult result = parsePacket(
+            raw,
+            len,
+            &p
+        );
 
         free(raw);
 
         if (result == PARSE_UNSUPPORTED) {
-            unsupported++;
+            ++unsupported;
             continue;
         }
 
         if (result != PARSE_OK) {
-            invalid++;
+            ++invalid;
             continue;
         }
 
-        packet.timestamp = timestamp;
+        p.timestamp = ts;
 
-        if (!enqueue(&queue, packet)) {
-            fprintf(stderr, "Queue 메모리 할당 실패\n");
+        if (!enqueue(&q, p)) {
+            fputs("Queue allocation failure\n", stderr);
             error = 1;
             break;
         }
 
-        Packet current;
+        Packet item;
 
-        if (!dequeue(&queue, &current)) {
-            fprintf(stderr, "Queue 처리 오류\n");
+        if (!dequeue(&q, &item)) {
+            fputs("Queue dequeue failure\n", stderr);
             error = 1;
             break;
         }
 
-        count++;
+        if (verbose) {
+            printPacket(
+                &item,
+                sec.total_packets + 1
+            );
+        }
 
-        printf("\n[Packet #%lu]\n", count);
-        printf("Timestamp : %.6f\n", current.timestamp);
+        if (!securityProcess(
+                &sec,
+                &item,
+                stdout
+            )) {
 
-        printf("Source IP : ");
-        printIP(current.src_ip);
-        printf("\n");
+            fputs(
+                "Security analyzer allocation failure\n",
+                stderr
+            );
 
-        printf("Dest IP   : ");
-        printIP(current.dst_ip);
-        printf("\n");
-
-        printf("Protocol  : %s\n",
-               current.protocol == 6 ? "TCP" : "UDP");
-
-        printf("Src Port  : %u\n", current.src_port);
-        printf("Dst Port  : %u\n", current.dst_port);
-        printf("IP Length : %u bytes\n", current.length);
+            error = 1;
+            break;
+        }
     }
 
-    printf("\n=== Summary ===\n");
-    printf("Parsed      : %lu\n", count);
-    printf("Unsupported : %lu\n", unsupported);
-    printf("Invalid     : %lu\n", invalid);
+    securityPrintSummary(&sec, stdout);
 
-    freeQueue(&queue);
+    printf(
+        "Unsupported: %llu\nInvalid: %llu\n",
+        unsupported,
+        invalid
+    );
+
+    if (error)
+        fputs(
+            "INCOMPLETE: processing stopped due to error\n",
+            stderr
+        );
+
+    securityFree(&sec);
+    freeQueue(&q);
     pcapClose(&reader);
 
     return error ? 1 : 0;

@@ -1,16 +1,21 @@
 #ifndef PACKET_H
 #define PACKET_H
 
-typedef struct Packet{
-	double timestamp;
-	unsigned int src_ip;
-	unsigned int dst_ip;
-	unsigned short src_port;
-	unsigned short dst_port;
-	unsigned char protocol;
-	unsigned int length;
+#include <stdint.h>
 
-}Packet;
+typedef struct Packet {
+    double timestamp;
 
+    uint32_t src_ip;
+    uint32_t dst_ip;
+
+    uint16_t src_port;
+    uint16_t dst_port;
+
+    uint8_t protocol;
+    uint32_t length;
+
+    uint8_t tcp_flags;
+} Packet;
 
 #endif

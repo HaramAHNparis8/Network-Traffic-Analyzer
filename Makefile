@@ -1,16 +1,16 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -std=c11 -g
+CFLAGS = -Wall -Wextra -Wpedantic -std=c11 -g
 CPPFLAGS = -I.
 
 TARGET = analyzer
-OBJS = main.o queue.o parser.o pcap_reader.o
+OBJS = main.o queue.o parser.o pcap_reader.o security.o
 
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $^
 
-main.o: main.c queue.h packet.h parser.h pcap_reader.h
+main.o: main.c pcap_reader.h parser.h queue.h security.h packet.h
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 queue.o: queue.c queue.h packet.h
@@ -22,17 +22,16 @@ parser.o: parser.c parser.h packet.h
 pcap_reader.o: pcap_reader.c pcap_reader.h
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
-test_queue: tests/test_queue.c tests/test_framework.h queue.o
-	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ tests/test_queue.c queue.o
+security.o: security.c security.h packet.h
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
-test_parser: tests/test_parser.c tests/test_framework.h parser.o
-	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ tests/test_parser.c parser.o
+test_security: tests/test_security.c security.o parser.o
+	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ $^
 
-test: test_queue test_parser
-	./test_queue
-	./test_parser
+test: test_security
+	./test_security
 
 clean:
-	rm -f $(TARGET) $(OBJS) test_queue test_parser
+	rm -f $(TARGET) $(OBJS) test_security
 
 .PHONY: all test clean

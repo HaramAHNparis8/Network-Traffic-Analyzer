@@ -1,10 +1,9 @@
-#include <stdint.h>
-#include <stddef.h>
 #include "parser.h"
 
-// 네트워크 바이트 순서(Big Endian) 해석
 static uint16_t read16(const uint8_t *p) {
-    return ((uint16_t)p[0] << 8) | p[1];
+    return (uint16_t)(
+        ((uint16_t)p[0] << 8) | p[1]
+    );
 }
 
 static uint32_t read32(const uint8_t *p) {
@@ -19,14 +18,10 @@ ParseResult parsePacket(
     size_t frame_length,
     Packet *packet
 ) {
-    if (frame == NULL || packet == NULL)
+    if (!frame || !packet || frame_length < 14)
         return PARSE_INVALID;
 
-    // Ethernet II 헤더 크기
-    if (frame_length < 14)
-        return PARSE_INVALID;
-
-    // EtherType: IPv4 = 0x0800
+    // Ethernet II에서 IPv4만 지원
     if (read16(frame + 12) != 0x0800)
         return PARSE_UNSUPPORTED;
 
@@ -36,54 +31,49 @@ ParseResult parsePacket(
     if (available < 20)
         return PARSE_INVALID;
 
-    // IPv4 버전과 헤더 길이
-    uint8_t version = ip[0] >> 4;
-    size_t ip_header_len = (ip[0] & 0x0F) * 4;
-
-    if (version != 4)
+    if ((ip[0] >> 4) != 4)
         return PARSE_INVALID;
 
-    if (ip_header_len < 20 ||
-        ip_header_len > available)
+    size_t ihl = (size_t)(ip[0] & 15u) * 4u;
+
+    if (ihl < 20 || ihl > available)
         return PARSE_INVALID;
 
-    uint16_t total_len = read16(ip + 2);
+    uint16_t ip_len = read16(ip + 2);
 
-    if (total_len < ip_header_len ||
-        total_len > available)
+    if (ip_len < ihl || ip_len > available)
         return PARSE_INVALID;
 
-    // 단편화된 IPv4 패킷은 일단 제외
-    uint16_t fragment = read16(ip + 6);
-
-    if ((fragment & 0x3FFF) != 0)
+    // IPv4 단편화 패킷은 지원하지 않음
+    if ((read16(ip + 6) & 0x3fffu) != 0)
         return PARSE_UNSUPPORTED;
 
-    // IP 헤더에서 정보 추출
-    Packet parsed = {0};
+    Packet out = {0};
 
-    parsed.src_ip = read32(ip + 12);
-    parsed.dst_ip = read32(ip + 16);
-    parsed.protocol = ip[9];
-    parsed.length = total_len;
+    out.src_ip = read32(ip + 12);
+    out.dst_ip = read32(ip + 16);
+    out.protocol = ip[9];
+    out.length = ip_len;
 
-    const uint8_t *transport = ip + ip_header_len;
-    size_t remaining = total_len - ip_header_len;
+    const uint8_t *transport = ip + ihl;
+    size_t remaining = (size_t)ip_len - ihl;
 
-    if (parsed.protocol == 6) {
-        // TCP 최소 헤더: 20 bytes
+    if (out.protocol == 6) {
+        // TCP 최소 헤더 길이 검증
         if (remaining < 20)
             return PARSE_INVALID;
 
-        size_t tcp_header_len =
-            (transport[12] >> 4) * 4;
+        size_t tcp_hlen =
+            (size_t)(transport[12] >> 4) * 4u;
 
-        if (tcp_header_len < 20 ||
-            tcp_header_len > remaining)
+        if (tcp_hlen < 20 || tcp_hlen > remaining)
             return PARSE_INVALID;
-    }
-    else if (parsed.protocol == 17) {
-        // UDP 헤더: 8 bytes
+
+        // TCP Flags 추출
+        out.tcp_flags = transport[13];
+
+    } else if (out.protocol == 17) {
+        // UDP 헤더 길이 검증
         if (remaining < 8)
             return PARSE_INVALID;
 
@@ -91,15 +81,15 @@ ParseResult parsePacket(
 
         if (udp_len < 8 || udp_len > remaining)
             return PARSE_INVALID;
-    }
-    else {
+
+    } else {
         return PARSE_UNSUPPORTED;
     }
 
-    parsed.src_port = read16(transport);
-    parsed.dst_port = read16(transport + 2);
+    out.src_port = read16(transport);
+    out.dst_port = read16(transport + 2);
 
-    *packet = parsed;
+    *packet = out;
 
     return PARSE_OK;
 }
