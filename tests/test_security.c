@@ -1,24 +1,13 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#include "conntrack.h"
-#include "security.h"
 #include "test_framework.h"
-static int passed = 0;
-static int failed = 0;
+#include "security.h"
+#include "parser.h"
 
-#define CHECK(cond, msg) do {                  \
-    if (cond) {                                \
-        printf("\033[32m[통과]\033[0m %s\n", msg); \
-        passed++;                              \
-    } else {                                   \
-        printf("\033[31m[실패]\033[0m %s\n", msg); \
-        printf("  위치: %s:%d\n", __FILE__, __LINE__); \
-        failed++;                              \
-    }                                          \
-} while (0)
-
-// 테스트용 TCP SYN 패킷 생성
+/*
+ * 테스트용 TCP SYN 패킷 생성
+ */
 static Packet makeTCP(
     uint32_t src,
     uint32_t dst,
@@ -31,6 +20,7 @@ static Packet makeTCP(
     p.dst_ip = dst;
     p.src_port = 50000;
     p.dst_port = port;
+
     p.protocol = 6;
     p.length = 40;
     p.timestamp = timestamp;
@@ -39,6 +29,9 @@ static Packet makeTCP(
     return p;
 }
 
+/*
+ * [1] TCP Flags 추출 테스트
+ */
 static void testTCPFlags(void) {
     printf("\n[1] TCP Flags Test\n");
 
@@ -57,6 +50,7 @@ static void testTCPFlags(void) {
     Packet p = {0};
 
     frame[47] = TCP_SYN;
+
     CHECK(
         parsePacket(frame, sizeof(frame), &p) == PARSE_OK &&
         p.tcp_flags == TCP_SYN,
@@ -64,6 +58,7 @@ static void testTCPFlags(void) {
     );
 
     frame[47] = TCP_ACK;
+
     CHECK(
         parsePacket(frame, sizeof(frame), &p) == PARSE_OK &&
         p.tcp_flags == TCP_ACK,
@@ -71,6 +66,7 @@ static void testTCPFlags(void) {
     );
 
     frame[47] = TCP_FIN;
+
     CHECK(
         parsePacket(frame, sizeof(frame), &p) == PARSE_OK &&
         p.tcp_flags == TCP_FIN,
@@ -78,6 +74,7 @@ static void testTCPFlags(void) {
     );
 
     frame[47] = TCP_RST;
+
     CHECK(
         parsePacket(frame, sizeof(frame), &p) == PARSE_OK &&
         p.tcp_flags == TCP_RST,
@@ -85,6 +82,7 @@ static void testTCPFlags(void) {
     );
 
     frame[47] = TCP_SYN | TCP_ACK;
+
     CHECK(
         parsePacket(frame, sizeof(frame), &p) == PARSE_OK &&
         p.tcp_flags == (TCP_SYN | TCP_ACK),
@@ -92,6 +90,9 @@ static void testTCPFlags(void) {
     );
 }
 
+/*
+ * [2] Port Scan 탐지 테스트
+ */
 static void testPortScan(void) {
     printf("\n[2] Port Scan Detection Test\n");
 
@@ -114,7 +115,11 @@ static void testPortScan(void) {
     }
 
     CHECK(ok, "19개 SYN 패킷 처리 성공");
-    CHECK(s.scans == 0, "19개 포트에서는 경고 없음");
+
+    CHECK(
+        s.scans == 0,
+        "19개 포트에서는 경고 없음"
+    );
 
     Packet p = makeTCP(
         0x0A000001,
@@ -136,6 +141,9 @@ static void testPortScan(void) {
     securityFree(&s);
 }
 
+/*
+ * [3] SYN Flood 의심 탐지 테스트
+ */
 static void testSYNFlood(void) {
     printf("\n[3] SYN Flood Detection Test\n");
 
@@ -144,7 +152,7 @@ static void testSYNFlood(void) {
 
     int ok = 1;
 
-    // 동일 목적지의 동일 포트로 SYN 99개
+    // 동일 목적지, 동일 포트로 SYN 99개
     for (int i = 0; i < 99; ++i) {
         Packet p = makeTCP(
             0x0A000001,
@@ -158,7 +166,11 @@ static void testSYNFlood(void) {
     }
 
     CHECK(ok, "99개 SYN 패킷 처리 성공");
-    CHECK(s.floods == 0, "99개에서는 Flood 경고 없음");
+
+    CHECK(
+        s.floods == 0,
+        "99개에서는 Flood 경고 없음"
+    );
 
     Packet p = makeTCP(
         0x0A000001,
@@ -182,9 +194,13 @@ static void testSYNFlood(void) {
         "단일 포트 접근은 Port Scan으로 분류하지 않음"
     );
 
-    // 쿨다운 이내 추가 패킷
+    // 쿨다운 이내 추가 SYN 패킷
     p.timestamp = 2.11;
-    securityProcess(&s, &p, NULL);
+
+    CHECK(
+        securityProcess(&s, &p, NULL),
+        "쿨다운 중 SYN 패킷 처리 성공"
+    );
 
     CHECK(
         s.floods == 1,
@@ -194,11 +210,16 @@ static void testSYNFlood(void) {
     securityFree(&s);
 }
 
+/*
+ * [4] 시간 구간 검증
+ */
 static void testTimeWindow(void) {
     printf("\n[4] Time Window Test\n");
 
     SecurityAnalyzer s;
     securityInit(&s);
+
+    int ok = 1;
 
     // 처음 19개 포트 접근
     for (int i = 0; i < 19; ++i) {
@@ -209,8 +230,11 @@ static void testTimeWindow(void) {
             i * 0.01
         );
 
-        securityProcess(&s, &p, NULL);
+        if (!securityProcess(&s, &p, NULL))
+            ok = 0;
     }
+
+    CHECK(ok, "초기 SYN 이벤트 처리 성공");
 
     // 10초가 지난 뒤 20번째 포트 접근
     Packet p = makeTCP(
@@ -220,7 +244,10 @@ static void testTimeWindow(void) {
         11.0
     );
 
-    securityProcess(&s, &p, NULL);
+    CHECK(
+        securityProcess(&s, &p, NULL),
+        "시간 초과 후 SYN 패킷 처리 성공"
+    );
 
     CHECK(
         s.scans == 0,
@@ -228,13 +255,17 @@ static void testTimeWindow(void) {
     );
 
     CHECK(
-        s.flows != NULL && s.flows->syn_count == 1,
+        s.flows != NULL &&
+        s.flows->syn_count == 1,
         "오래된 SYN 이벤트 삭제 확인"
     );
 
     securityFree(&s);
 }
 
+/*
+ * [5] 트래픽 통계 검증
+ */
 static void testStatistics(void) {
     printf("\n[5] Traffic Statistics Test\n");
 
@@ -257,9 +288,13 @@ static void testStatistics(void) {
     udp.timestamp = 2.0;
 
     int ok = securityProcess(&s, &tcp, NULL);
+
     ok = securityProcess(&s, &udp, NULL) && ok;
 
-    CHECK(ok, "TCP 및 UDP 통계 처리 성공");
+    CHECK(
+        ok,
+        "TCP 및 UDP 통계 처리 성공"
+    );
 
     CHECK(
         s.total_packets == 2,
@@ -293,8 +328,15 @@ static void testStatistics(void) {
     securityFree(&s);
 }
 
+/*
+ * 테스트 실행
+ */
 int main(void) {
-    printf("========== Security Analyzer Test ==========\n");
+    initTestFramework();
+
+    printf(
+        "\n========== Security Analyzer Test ==========\n"
+    );
 
     testTCPFlags();
     testPortScan();
@@ -302,9 +344,7 @@ int main(void) {
     testTimeWindow();
     testStatistics();
 
-    printf("\n========== 테스트 요약 ==========\n");
-    printf("통과: %d\n", passed);
-    printf("실패: %d\n", failed);
+    TEST_SUMMARY();
 
-    return failed == 0 ? 0 : 1;
+    return tests_failed == 0 ? 0 : 1;
 }
