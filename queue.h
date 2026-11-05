@@ -15,6 +15,10 @@ typedef struct Queue {
 	size_t size;
 } Queue;
 
+void initQueue(Queue *queue);
+int enqueue(Queue *queue, Packet packet);
+int dequeue(QUEUE *queue, Packet *packet);
+int isEmpty(con);
 #endif
 
 
