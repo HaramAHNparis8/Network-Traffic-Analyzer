@@ -26,7 +26,7 @@ int main(void) {
 
     printf("================================ 큐 테스트 ================================\n\n");
 
-    // 1. 초기화 검증
+    // 0. 초기화 검증
     printf("[1] Initialize Queue\n");
     printQueue(&queue);
 
@@ -34,7 +34,7 @@ int main(void) {
     CHECK(queue.front == NULL, "초기 Front");
     CHECK(queue.rear == NULL, "초기 Rear");
 
-    // 2. 패킷 생성
+    // 1. 패킷 생성
     Packet p1 = {0};
     Packet p2 = {0};
     Packet p3 = {0};
@@ -43,28 +43,28 @@ int main(void) {
     p2.src_ip = 20;
     p3.src_ip = 30;
 
-    // 3. 첫 번째 삽입
+    // 2. 첫 번째 삽입
     printf("\n[2] Enqueue 10\n");
 
     int r1 = enqueue(&queue, p1);
     CHECK_EQ(r1, 1, "첫 번째 삽입 성공");
     printQueue(&queue);
 
-    // 4. 두 번째 삽입
+    // 3. 두 번째 삽입
     printf("[3] Enqueue 20\n");
 
     int r2 = enqueue(&queue, p2);
     CHECK_EQ(r2, 1, "두 번째 삽입 성공");
     printQueue(&queue);
 
-    // 5. 세 번째 삽입
+    // 4. 세 번째 삽입
     printf("[4] Enqueue 30\n");
 
     int r3 = enqueue(&queue, p3);
     CHECK_EQ(r3, 1, "세 번째 삽입 성공");
     printQueue(&queue);
 
-    // 6. 연결 리스트 검증
+    // 5. 연결 리스트 검증
     printf("[5] Verify Linked List\n");
 
     CHECK_EQ(queue.size, 3, "전체 노드 개수");
@@ -95,9 +95,29 @@ int main(void) {
         CHECK(queue.rear->next == NULL,
               "마지막 노드의 next == NULL");
     }
+    //6.dequeue검증
+    printf("\n[6] Dequeue Test\n");
+
+    Packet removed = {0};
+
+    int result = dequeue(&queue, &removed);
+
+    CHECK_EQ(result, 1, "Dequeue 성공");
+    CHECK_EQ(removed.src_ip, 10, "FIFO 순서 확인");
+    CHECK_EQ(queue.size, 2, "삭제 후 큐 크기");
+
+    CHECK(queue.front != NULL, "Front 존재");
+
+    if (queue.front != NULL) {
+
+        CHECK_EQ(queue.front->packet.src_ip,
+		20, "Front 이동 확인");
+}
+
+    printQueue(&queue);
 
     // 7. 메모리 해제
-    printf("\n[6] Free Queue\n");
+    printf("\n[7] Free Queue\n");
 
     freeQueue(&queue);
     printQueue(&queue);
@@ -106,18 +126,27 @@ int main(void) {
     CHECK(queue.front == NULL, "해제 후 Front");
     CHECK(queue.rear == NULL, "해제 후 Rear");
 
-    // 8. 전체 결과
-    printf("\n[7] Failure Detection Test\n");
+// 8. isEmpty 검증
+    printf("\n[8] isEmpty Test\n");
 
-    // 정상적인 큐 크기는 0이지만 일부러 5를 기대
-    CHECK_EQ(queue.size, 5, "큐 크기 불일치 탐지");
+    CHECK_EQ(isEmpty(&queue), 1,
+         "빈 큐 상태 확인");
 
-    // front는 NULL이지만 일부러 NULL이 아니라고 검사
-    CHECK(queue.front != NULL, "Front 포인터 오류 탐지");
+// 9. 의도적인 오류 탐지 테스트
+    printf("\n[9] Failure Detection Test\n");
 
-    // 실제로는 정상적인 조건도 함께 확인
-    CHECK_EQ(queue.size, 0, "정상 조건 검증");
+    CHECK_EQ(queue.size, 5,
+         "큐 크기 불일치 탐지");
+
+    CHECK(queue.front != NULL,
+      "Front 포인터 오류 탐지");
+
+    CHECK_EQ(queue.size, 0,
+         "정상 조건 검증");
+
+// 최종 결과
     TEST_SUMMARY();
 
     return tests_failed == 0 ? 0 : 1;
+
 }
