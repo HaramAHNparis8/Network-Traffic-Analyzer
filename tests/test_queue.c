@@ -22,7 +22,7 @@ int main(void) {
     Queue queue;
     initQueue(&queue);
 
-    printf("========== 큐 테스트 ==========\n\n");
+    printf("================================ 큐 테스트================================\n\n");
 
     // 1. 초기화 검증
     printf("[1] Initialize Queue\n");
@@ -93,9 +93,28 @@ int main(void) {
         CHECK(queue.rear->next == NULL,
               "마지막 노드의 next == NULL");
     }
+    printf("\n[6] Dequeue Test\n");
 
+    Packet removed = {0};
+
+    int result = dequeue(&queue, &removed);
+
+    CHECK_EQ(result, 1, "첫 번째 Dequeue 성공");
+    CHECK_EQ(removed.src_ip, 10, "FIFO 순서 확인");
+    CHECK_EQ(queue.size, 2, "삭제 후 큐 크기");
+
+    if (queue.front != NULL) {
+
+		CHECK_EQ(queue.front->packet.src_ip,
+20, "Front 이동 확인");
+} 
+    else {
+		CHECK(0, "Front 노드 존재");
+}
+
+    printQueue(&queue);
     // 7. 메모리 해제
-    printf("\n[6] Free Queue\n");
+    printf("\n[7] Free Queue\n");
 
     freeQueue(&queue);
     printQueue(&queue);
