@@ -10,7 +10,7 @@ typedef struct Packet{
 	unsigned char protocol;
 	unsigned int length;
 
-}PACKET
+}PACKET;
 
 
 #endif
